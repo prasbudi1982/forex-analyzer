@@ -1,0 +1,7 @@
+.env
+data/ohlc/
+node_modules/
+frontend/node_modules/
+node_modules/
+frontend/node_modules/
+__pycache__/

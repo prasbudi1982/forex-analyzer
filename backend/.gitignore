@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+.next/
+.env
+.env.local
+data/ohlc/*
+!data/ohlc/.gitkeep
+*.log
+*.zip

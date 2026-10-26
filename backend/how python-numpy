@@ -1,0 +1,11 @@
+[1mPackage: [0m[32mpython-pandas[0m
+[1mVersion:[0m 3.0.6
+[1mMaintainer:[0m @termux-user-repository
+[1mInstalled-Size: [0m54.2 MB
+[1mDepends:[0m libc++, python, python-numpy, python-pip
+[1mHomepage:[0m https://pandas.pydata.org/
+[1mDownload-Size: [0m7261 kB
+[1mAPT-Sources: [0mhttps://tur.kcubeterm.com tur-packages/tur aarch64 Packages
+[1mDescription: [0mPowerful Python data analysis toolkit
+
+[1mNotice: [0mThere is 1 additional record. Please use the '-a' switch to see it[0m

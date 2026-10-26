@@ -1,0 +1,23 @@
+
+> forex-analyzer-frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+(node:41829) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ○ Compiling /chart ...
+ ✓ Compiled /chart in 2.1s (674 modules)
+ GET /chart 200 in 2438ms
+ ✓ Compiled in 742ms (674 modules)
+ GET /chart 200 in 155ms
+ ✓ Compiled in 562ms (674 modules)
+ GET /chart 200 in 180ms
+ ○ Compiling / ...
+ ✓ Compiled / in 654ms (680 modules)
+ ✓ Compiled /scanner in 438ms (686 modules)
+ ○ Compiling /calendar ...
+ ✓ Compiled /calendar in 631ms (692 modules)
