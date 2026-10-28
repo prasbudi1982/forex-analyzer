@@ -1,4 +1,9 @@
+import os
 from pydantic_settings import BaseSettings
+
+# Dapatkan path absolut ke folder backend (dua level di atas folder core)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ENV_FILE_PATH = os.path.join(BASE_DIR, ".env")
 
 class Settings(BaseSettings):
     APP_NAME: str = "forex-analyzer"
@@ -8,10 +13,13 @@ class Settings(BaseSettings):
     OANDA_API_KEY: str = ""
     OANDA_ACCOUNT_ID: str = ""
     REDIS_URL: str = "redis://localhost:6379/0"
-    GEMINI_API_KEY: str = ""  # <-- Tambahkan baris ini
+    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = "" # <-- Pastikan ini ada
 
     class Config:
-        env_file = ".env"
-        extra = "ignore"      # <-- Tambahkan ini agar tidak crash jika ada variabel lain di .env
+        # Arahkan Pydantic ke path absolut file .env
+        env_file = ENV_FILE_PATH
+        env_file_encoding = 'utf-8'
+        extra = "ignore"
 
 settings = Settings()

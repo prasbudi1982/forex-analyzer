@@ -30,24 +30,6 @@ export default function ScannerPage() {
     return num > 500 ? num.toFixed(2) : num.toFixed(5);
   };
 
-  // Fungsi untuk menentukan Disclaimer Risiko berdasarkan setup
-  const getRiskDisclaimer = (setupName: string) => {
-    switch(setupName) {
-      case 'market_expansion':
-        return { text: "Harga mungkin sudah bergerak terlalu jauh (FOMO). Hindari entry jika candle sudah terlalu panjang, tunggu pullback.", color: "#ff9800" };
-      case 'breakout':
-        return { text: "Waspada Fakeout. Pastikan ada konfirmasi volume atau candle penutup sebelum entry.", color: "#ff9800" };
-      case 'buy_on_dip':
-      case 'sell_on_rally':
-        return { text: "Sinyal melawan momentum jangka pendek. Gunakan Stop Loss ketat dan target realistis.", color: "#ef5350" };
-      case 'bullish_divergence':
-      case 'bearish_divergence':
-        return { text: "Divergence bisa memberikan sinyal palsu jika tren sangat kuat. Tunggu konfirmasi pola candle reversal.", color: "#ef5350" };
-      default:
-        return { text: "Pastikan analisa teknikal mendukung dan gunakan manajemen risiko (maksimal 1-2% per trade).", color: "#aaa" };
-    }
-  };
-
   const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
       try { wakeLockRef.current = await (navigator as any).wakeLock.request('screen'); } catch (err) {}
@@ -86,9 +68,8 @@ export default function ScannerPage() {
         setSessionInfo(sesRes.data);
         setLoading(false);
 
-        // LOGIKA AUTO-AI BARU: Terpicu pada setup APAPUN, asalkan itu baru
+        // AUTO-AI: Terpicu pada setiap setup baru
         if (autoAiActive && fetchedSetups.length > 0 && !aiLoading) {
-            // Ambil sinyal terbaru (index 0)
             const latestSignal = fetchedSetups[0]; 
             const signalKey = `${latestSignal.setup}-${latestSignal.dir}-${latestSignal.time_iso}`;
             
@@ -171,7 +152,7 @@ export default function ScannerPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 10, background: '#1e1e2d', borderRadius: 8, marginBottom: 15, border: '1px solid #333' }}>
         <div>
           <strong style={{ fontSize: '0.9em' }}>Auto-Analisa AI</strong>
-          <p style={{ margin: 0, fontSize: '0.75em', color: '#aaa' }}>Panggil AI otomatis pada setiap sinyal baru.</p>
+          <p style={{ margin: 0, fontSize: '0.75em', color: '#aaa' }}>Panggil AI otomatis & jaga layar tetap menyala.</p>
         </div>
         <label style={{ position: 'relative', display: 'inline-block', width: 46, height: 24 }}>
           <input type="checkbox" checked={autoAiActive} onChange={(e) => setAutoAiActive(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
@@ -256,37 +237,30 @@ export default function ScannerPage() {
       <h3 style={{ fontSize: '1em', marginBottom: 10 }}>Setup & Pola ({tf})</h3>
       {loading ? <p>Memindai...</p> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {setups.map((s: any, i: number) => {
-            const risk = getRiskDisclaimer(s.setup);
-            return (
-              <div key={`setup-${i}`} style={{ padding: 10, background: '#1e1e2d', borderRadius: 6, borderLeft: `4px solid ${s.dir === 'bull' ? '#26a69a' : '#ef5350'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ padding: '2px 6px', borderRadius: 4, fontSize: '0.7em', fontWeight: 'bold', background: s.dir === 'bull' ? '#26a69a' : '#ef5350', color: 'white' }}>
-                        {s.dir === 'bull' ? 'BUY' : 'SELL'}
-                      </span>
-                      <span style={{ fontSize: '0.9em', fontWeight: 'bold', color: '#ffeb3b', textTransform: 'capitalize' }}>
-                        {s.setup.replace(/_/g, ' ')}
-                      </span>
-                      {s.confluence && <span style={{ padding: '1px 4px', background: '#4CAF50', color: 'white', borderRadius: '3px', fontSize: '0.65em' }}>HTF MATCH</span>}
-                    </div>
-                    <div style={{ fontSize: '0.75em', color: '#aaa', marginBottom: 8 }}>
-                      <span style={{ color: '#fff' }}>E:</span> {formatPrice(s.entry_price)} | <span style={{ color: '#ef5350' }}>SL:</span> {formatPrice(s.sl)} | <span style={{ color: '#26a69a' }}>TP:</span> {formatPrice(s.tp)}
-                    </div>
-                    {/* DISCLAIMER RISIKO */}
-                    <div style={{ fontSize: '0.7em', color: risk.color, borderTop: '1px solid #333', paddingTop: 6, marginTop: 4 }}>
-                      ⚠️ {risk.text}
-                    </div>
+          {setups.map((s: any, i: number) => (
+            <div key={`setup-${i}`} style={{ padding: 10, background: '#1e1e2d', borderRadius: 6, borderLeft: `4px solid ${s.dir === 'bull' ? '#26a69a' : '#ef5350'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ padding: '2px 6px', borderRadius: 4, fontSize: '0.7em', fontWeight: 'bold', background: s.dir === 'bull' ? '#26a69a' : '#ef5350', color: 'white' }}>
+                      {s.dir === 'bull' ? 'BUY' : 'SELL'}
+                    </span>
+                    <span style={{ fontSize: '0.9em', fontWeight: 'bold', color: '#ffeb3b', textTransform: 'capitalize' }}>
+                      {s.setup.replace(/_/g, ' ')}
+                    </span>
+                    {s.confluence && <span style={{ padding: '1px 4px', background: '#4CAF50', color: 'white', borderRadius: '3px', fontSize: '0.65em' }}>HTF MATCH</span>}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, marginLeft: 10 }}>
-                    <span style={{ fontSize: '0.7em', color: '#aaa' }}>{timeAgo(s.time_iso)}</span>
-                    <button onClick={() => handleSaveTrade(s)} style={{ padding: '4px 8px', background: '#26a69a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75em', fontWeight: 'bold' }}>💾 Simpan</button>
+                  <div style={{ fontSize: '0.75em', color: '#aaa' }}>
+                    <span style={{ color: '#fff' }}>E:</span> {formatPrice(s.entry_price)} | <span style={{ color: '#ef5350' }}>SL:</span> {formatPrice(s.sl)} | <span style={{ color: '#26a69a' }}>TP:</span> {formatPrice(s.tp)}
                   </div>
                 </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+                  <span style={{ fontSize: '0.7em', color: '#aaa' }}>{timeAgo(s.time_iso)}</span>
+                  <button onClick={() => handleSaveTrade(s)} style={{ padding: '4px 8px', background: '#26a69a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75em', fontWeight: 'bold' }}>💾 Simpan</button>
+                </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
           {patterns.map((p: any, i: number) => (
             <div key={`pattern-${i}`} style={{ padding: 10, background: '#1e1e2d', borderRadius: 6, borderLeft: `4px solid #9C27B0` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
