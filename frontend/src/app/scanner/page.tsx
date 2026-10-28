@@ -30,6 +30,36 @@ export default function ScannerPage() {
     return num > 500 ? num.toFixed(2) : num.toFixed(5);
   };
 
+  // FUNGSI NOTIFIKASI DENGAN SERVICE WORKER
+  const sendNotification = async (title: string, body: string) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      
+      await registration.showNotification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        vibrate: [200, 100, 200]
+      });
+    } catch (e) {
+      console.warn("Gagal pakai Service Worker, fallback ke Notification biasa:", e);
+      try {
+        new Notification(title, { body, icon: '/favicon.ico' });
+      } catch (err) {
+        console.warn("Fallback juga gagal:", err);
+      }
+    }
+  };
+
+  const requestNotificationPermission = () => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
+  };
+
   const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
       try { wakeLockRef.current = await (navigator as any).wakeLock.request('screen'); } catch (err) {}
@@ -40,6 +70,20 @@ export default function ScannerPage() {
       try { await wakeLockRef.current.release(); wakeLockRef.current = null; } catch (err) {}
     }
   };
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  // Effect khusus untuk notifikasi AI (terisolasi, tidak mengganggu proses AI)
+  useEffect(() => {
+    if (aiResult && !aiResult.error && !aiLoading) {
+      sendNotification(
+        `AI Verdict ${pair}: ${aiResult.kesimpulan}`,
+        `Aksi: ${aiResult.rekomendasi_aksi} | Entry: ${formatPrice(aiResult.entry_price)} | TP: ${formatPrice(aiResult.take_profit)}`
+      );
+    }
+  }, [aiResult]);
 
   useEffect(() => {
     if (autoAiActive) requestWakeLock(); else releaseWakeLock();
@@ -68,13 +112,18 @@ export default function ScannerPage() {
         setSessionInfo(sesRes.data);
         setLoading(false);
 
-        // AUTO-AI: Terpicu pada setiap setup baru
         if (autoAiActive && fetchedSetups.length > 0 && !aiLoading) {
             const latestSignal = fetchedSetups[0]; 
             const signalKey = `${latestSignal.setup}-${latestSignal.dir}-${latestSignal.time_iso}`;
             
             if (lastProcessedSignal.current !== signalKey) {
                 lastProcessedSignal.current = signalKey;
+                
+                sendNotification(
+                  `Sinyal Baru: ${pair}`, 
+                  `${latestSignal.setup.replace(/_/g, ' ').toUpperCase()} (${latestSignal.dir.toUpperCase()})`
+                );
+
                 triggerAI(fetchedSetups, fetchedPatterns);
             }
         }
@@ -119,6 +168,11 @@ export default function ScannerPage() {
     triggerAI(setups, patterns);
   };
 
+  // Fungsi tes notifikasi
+  const handleTestNotif = () => {
+    sendNotification("Tes Notifikasi", "Jika Anda melihat ini, berarti notifikasi berfungsi!");
+  };
+
   const handleSaveTrade = async (s: any) => {
     try {
       await api.post('/journal/add', {
@@ -149,10 +203,10 @@ export default function ScannerPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 10, background: '#1e1e2d', borderRadius: 8, marginBottom: 15, border: '1px solid #333' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 10, background: '#1e1e2d', borderRadius: 8, marginBottom: 10, border: '1px solid #333' }}>
         <div>
           <strong style={{ fontSize: '0.9em' }}>Auto-Analisa AI</strong>
-          <p style={{ margin: 0, fontSize: '0.75em', color: '#aaa' }}>Panggil AI otomatis & jaga layar tetap menyala.</p>
+          <p style={{ margin: 0, fontSize: '0.75em', color: '#aaa' }}>Panggil AI otomatis, notifikasi & jaga layar tetap menyala.</p>
         </div>
         <label style={{ position: 'relative', display: 'inline-block', width: 46, height: 24 }}>
           <input type="checkbox" checked={autoAiActive} onChange={(e) => setAutoAiActive(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
@@ -161,6 +215,14 @@ export default function ScannerPage() {
           </span>
         </label>
       </div>
+
+      {/* TOMBOL TES NOTIFIKASI */}
+      <button 
+        onClick={handleTestNotif}
+        style={{ width: '100%', padding: '8px', marginBottom: 15, background: '#2B2B43', color: '#fff', border: '1px dashed #555', borderRadius: '4px', fontSize: '0.8em', cursor: 'pointer' }}
+      >
+        🔔 Tes Tampilkan Notifikasi
+      </button>
 
       {sessionInfo && (
         <div style={{ padding: 10, borderRadius: 8, marginBottom: 15, background: sessionInfo.volatility === 'Tinggi' ? '#1b3a2a' : '#2B2B43', borderLeft: `4px solid ${sessionInfo.volatility === 'Tinggi' ? '#26a69a' : '#ff9800'}`, fontSize: '0.85em' }}>
